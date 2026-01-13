@@ -1,0 +1,84 @@
+# Exercise Form Detection System Configuration
+
+# Pose Detection Settings
+pose_detection:
+  model_complexity: 1  # 0, 1, or 2 (higher = more accurate but slower)
+  min_detection_confidence: 0.5
+  min_tracking_confidence: 0.5
+  enable_segmentation: false
+  
+# Temporal Smoothing
+smoothing:
+  enabled: true
+  window_size: 5  # Number of frames to average
+
+# Performance
+performance:
+  target_fps: 30
+  max_fps: 60
+
+# Squat Thresholds
+squat:
+  # Depth thresholds (hip to ankle ratio)
+  depth_shallow_threshold: 0.60  # Above this is shallow
+  depth_parallel_threshold: 0.55  # Parallel squat
+  depth_deep_threshold: 0.50     # Deep squat
+  
+  # Knee valgus detection (knee angle deviation)
+  knee_valgus_threshold: 15  # degrees from vertical
+  
+  # Forward lean (torso angle from vertical)
+  forward_lean_threshold: 45  # degrees
+  
+  # Phase detection
+  standing_hip_angle: 160  # Hip angle when standing
+  bottom_hip_angle: 90     # Hip angle at bottom position
+
+# Push-up Thresholds
+pushup:
+  # Hip sag detection (hip drop from straight line)
+  hip_sag_threshold: 15  # degrees from straight
+  
+  # Range of motion (elbow angle)
+  top_elbow_angle: 160    # Arms extended
+  bottom_elbow_angle: 90  # Bottom position
+  shallow_threshold: 110  # Incomplete ROM
+  
+  # Elbow flare (angle from body)
+  elbow_flare_threshold: 45  # degrees
+
+# Lunge Thresholds
+lunge:
+  # Front knee alignment (over ankle)
+  knee_over_toe_threshold: 0.1  # Ratio of knee-to-toe distance
+  
+  # Depth (back knee to ground)
+  depth_threshold: 0.3  # Ratio to leg length
+  
+  # Balance (torso lean)
+  torso_lean_threshold: 20  # degrees from vertical
+  
+  # Phase detection
+  standing_front_knee_angle: 170
+  lunge_front_knee_angle: 90
+
+# Visualization
+visualization:
+  show_skeleton: true
+  show_landmarks: true
+  landmark_radius: 5
+  line_thickness: 2
+  feedback_font_scale: 0.7
+  feedback_font_thickness: 2
+
+# Logging
+logging:
+  enabled: true
+  output_directory: "logs"
+  session_prefix: "exercise_session"
+  
+# Calibration
+calibration:
+  enabled: true
+  required_frames: 60  # Frames to collect for calibration
+  standing_pose_required: true

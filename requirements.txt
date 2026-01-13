@@ -1,0 +1,7 @@
+# Note: This project works best with Python 3.9-3.12
+# For Python 3.13, mediapipe uses the new Tasks API (automatically handled)
+
+opencv-python>=4.8.0
+mediapipe>=0.10.31
+numpy>=2.0.0
+pyyaml>=6.0
