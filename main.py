@@ -35,7 +35,7 @@ class ExerciseAnalyzer:
     Main application class for exercise form detection and analysis.
     """
     
-    def __init__(self, config_path: str = 'config.yaml', exercise_type: str = 'squat'):
+    def __init__(self, config_path: str = 'config.yaml', exercise_type: str = 'lunge'):
         """
         Initialize the exercise analyzer.
         
@@ -274,9 +274,9 @@ def main():
     parser.add_argument(
         '--exercise', '-e',
         type=str,
-        default='squat',
+        default='lunge',
         choices=['squat', 'pushup', 'push-up', 'lunge'],
-        help='Exercise type to detect (default: squat)'
+        help='Exercise type to detect (default: lunge)'
     )
     parser.add_argument(
         '--source', '-s',

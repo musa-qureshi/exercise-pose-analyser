@@ -79,19 +79,73 @@ pushup:
   elbow_flare_threshold: 45  # degrees
 
 # Lunge Thresholds
+# -----------------------------------------------------------------------------
+# CAMERA POSITIONING: Stand SIDEWAYS to camera (your left or right side facing it)
+# This allows the system to see your front and back leg positions clearly.
+# The system will NOT detect lunges if you're facing the camera directly.
+# -----------------------------------------------------------------------------
 lunge:
-  # Front knee alignment (over ankle)
-  knee_over_toe_threshold: 0.1  # Ratio of knee-to-toe distance
+  # Sideways detection - shoulder/hip width threshold
+  # When sideways, shoulders appear narrow. This prevents squats being detected as lunges.
+  # Lower = stricter (must be more sideways), Higher = more lenient
+  sideways_threshold: 0.12
   
-  # Depth (back knee to ground)
-  depth_threshold: 0.3  # Ratio to leg length
+  # Minimum horizontal (X) foot separation for lunge stance
+  # Feet must be this far apart front-to-back to count as a lunge
+  # Also: X separation must be GREATER than Y separation (prevents squat detection)
+  min_foot_separation: 0.10
+
+  # ============================================================================
+  # FORM CHECKS (warnings only - don't prevent rep counting)
+  # ============================================================================
   
-  # Balance (torso lean)
-  torso_lean_threshold: 20  # degrees from vertical
+  # Front knee alignment (horizontal distance knee goes past ankle)
+  # ----------------------------------------------------------------------------
+  # EASIER: 0.20+ (allows knee to travel forward)
+  # MODERATE: 0.15 (current)
+  # HARDER: 0.08-0.10 (knee must stay directly over ankle)
+  knee_over_toe_threshold: 0.15
   
-  # Phase detection
-  standing_front_knee_angle: 170
-  lunge_front_knee_angle: 90
+  # Back knee depth (vertical distance from back knee to ground/ankle)
+  # ----------------------------------------------------------------------------
+  # The back knee should drop close to the ground for a proper lunge.
+  # EASIER: 0.40-0.50 (knee can stay high)
+  # MODERATE: 0.25-0.35 (knee must drop noticeably)
+  # HARDER: 0.15-0.20 (knee must nearly touch ground)
+  depth_threshold: 0.25
+  
+  # Back leg extension (horizontal distance from back knee to front heel)
+  # ----------------------------------------------------------------------------
+  # Ensures back leg isn't too straight. Back knee should drop down 
+  # relatively close to (but behind) the front foot.
+  # EASIER: 0.35+ (allows very extended back leg)
+  # MODERATE: 0.28-0.32 (back knee reasonably close)
+  # HARDER: 0.18-0.22 (back knee must be close to front heel)
+  back_knee_max_distance: 0.30
+  
+  # Torso lean (angle from vertical - catches BOTH forward and backward lean)
+  # ----------------------------------------------------------------------------
+  # EASIER: 40-50 degrees (allows significant lean)
+  # MODERATE: 25-35 degrees (some lean allowed)
+  # HARDER: 15-20 degrees (torso must stay very upright)
+  torso_lean_threshold: 20
+  
+  # ============================================================================
+  # PHASE DETECTION (controls when a rep counts)
+  # ============================================================================
+  
+  # standing_front_knee_angle: Angle above which you're considered "UP"
+  # ----------------------------------------------------------------------------
+  # EASIER: 130-140 degrees (don't need to straighten leg much)
+  # HARDER: 150-160 degrees (must fully straighten front leg)
+  standing_front_knee_angle: 140
+  
+  # lunge_front_knee_angle: Angle below which you're considered "DOWN"
+  # ----------------------------------------------------------------------------
+  # EASIER: 130-140 degrees (shallow lunge counts)
+  # MODERATE: 110-120 degrees (decent depth required)
+  # HARDER: 90-100 degrees (must reach proper 90 degree lunge)
+  lunge_front_knee_angle: 115
 
 # Visualization
 visualization:
