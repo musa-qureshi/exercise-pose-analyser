@@ -209,3 +209,57 @@ def normalize_landmark(landmark: np.ndarray, reference_point: np.ndarray,
         Normalized coordinates
     """
     return (np.array(landmark) - np.array(reference_point)) / (scale + 1e-6)
+
+
+def calculate_foot_angle(heel: np.ndarray, toe: np.ndarray, is_left_foot: bool) -> float:
+    """
+    Calculate foot angle relative to the forward (vertical) direction.
+    
+    The foot direction is determined by the vector from heel to toe.
+    We measure how much this vector deviates from pointing straight forward.
+    
+    In normalized coordinates:
+    - X increases to the right
+    - Y increases downward (forward direction when facing camera)
+    
+    Args:
+        heel: Heel landmark coordinates (x, y, visibility)
+        toe: Foot index (toe) landmark coordinates (x, y, visibility)
+        is_left_foot: True if this is the left foot, False for right foot
+        
+    Returns:
+        Angle in degrees:
+        - Positive = foot pointing outward (toes away from body midline)
+        - Negative = foot pointing inward (toes toward body midline)
+        - 0 = foot pointing straight forward
+        
+    Math explanation:
+        The forward direction is (0, 1) - straight down in image coordinates.
+        We compute the signed angle between the foot vector and forward.
+        For left foot: positive X deviation = outward
+        For right foot: negative X deviation = outward
+    """
+    heel = np.array(heel[:2])
+    toe = np.array(toe[:2])
+    
+    # Foot direction vector (heel to toe)
+    foot_vec = toe - heel
+    
+    # Forward direction (straight ahead, Y-positive in image coords)
+    forward = np.array([0, 1])
+    
+    # Calculate angle using atan2 for signed angle
+    # atan2(cross, dot) gives signed angle
+    cross = foot_vec[0] * forward[1] - foot_vec[1] * forward[0]  # 2D cross product (scalar)
+    dot = np.dot(foot_vec, forward)
+    
+    angle_rad = np.arctan2(cross, dot)
+    angle_deg = np.degrees(angle_rad)
+    
+    # Adjust sign based on which foot:
+    # For left foot: positive angle (toe going right/outward) = outward
+    # For right foot: positive angle (toe going right) = inward, so we flip
+    if not is_left_foot:
+        angle_deg = -angle_deg
+    
+    return angle_deg

@@ -24,15 +24,46 @@ squat:
   depth_parallel_threshold: 0.55  # Parallel squat
   depth_deep_threshold: 0.50     # Deep squat
   
-  # Knee valgus detection (knee angle deviation)
-  knee_valgus_threshold: 15  # degrees from vertical
+  # how we'l; decide knee alignment detection
+  # ─────────────────────────────────────────────────────────────────────
+  # KNEE VALGUS (knees caving inward / knock knees)
+  #   Current: 0.5 (lenient - catches severe knock knees only)
+  #   Stricter: 0.75-0.85 (catches minor inward collapse)
+  #   Perfect form: 0.9+ (knees must stay directly over ankles, this is quite hard, not practical as I saw)
+  knee_valgus_threshold: 0.5
+  
+  # KNEE SPREAD (knees too wide / rhombus legs)
+  #   Current: 2.4 (lenient - extreme splay of knees only)
+  #   Stricter: 1.6-1.8 (catches moderate spread)
+  #   Perfect form: 1.4-1.5 (knees must track over toes precisely, again too hard but recommended by ai)
+  knee_spread_threshold: 2.4
+  # ─────────────────────────────────────────────────────────────────────
+  
+  # FOOT ANGLE (feet pointing inward/outward)
+  # ─────────────────────────────────────────────────────────────────────
+  # We measure the angle each foot makes relative to "forward" (straight ahead).
+  # Positive = outward (duck feet), Negative = inward (pigeon toed).
+  # Natural stance: feet can be 0-30° outward comfortably.
+  # 
+  # foot_outward_threshold: max degrees outward before warning
+  #   Current: 50 (lenient - only catches very duck-footed stance)
+  #   Stricter: 35-40 (catches moderate external rotation)
+  #   Note: 90° would be perpendicular/sideways
+  foot_outward_threshold: 60
+  
+  # foot_inward_threshold: max degrees inward before warning
+  #   Current: 20 (catches pigeon-toed stance)
+  #   Stricter: 10-15 (catches minor internal rotation)
+  #   Note: Inward feet are generally worse for knee health
+  foot_inward_threshold: 20
+  # ─────────────────────────────────────────────────────────────────────
   
   # Forward lean (torso angle from vertical)
   forward_lean_threshold: 45  # degrees
   
   # Phase detection
   standing_hip_angle: 160  # Hip angle when standing
-  bottom_hip_angle: 90     # Hip angle at bottom position
+  bottom_hip_angle: 110    # Hip angle at bottom position (higher = easier, lower = deeper squat required)
 
 # Push-up Thresholds
 pushup:
