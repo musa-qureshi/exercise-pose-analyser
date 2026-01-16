@@ -27,9 +27,13 @@ class PushUpExercise(BaseExercise):
         self.exercise_config = config['pushup']
         self.name = "Push-up"
         
+        # Phase detection state for hysteresis
+        self._went_to_bottom = False  # Must reach bottom before counting rep
+        
     def detect_exercise(self, landmarks: np.ndarray) -> bool:
         """
         Detect if person is in push-up position (plank-like).
+        Ensures person is actually on the ground, not crouching in air.
         """
         # Get key landmarks
         left_shoulder = landmarks[PoseLandmark.LEFT_SHOULDER]
@@ -38,6 +42,10 @@ class PushUpExercise(BaseExercise):
         right_hip = landmarks[PoseLandmark.RIGHT_HIP]
         left_ankle = landmarks[PoseLandmark.LEFT_ANKLE]
         right_ankle = landmarks[PoseLandmark.RIGHT_ANKLE]
+        left_wrist = landmarks[PoseLandmark.LEFT_WRIST]
+        right_wrist = landmarks[PoseLandmark.RIGHT_WRIST]
+        left_knee = landmarks[PoseLandmark.LEFT_KNEE]
+        right_knee = landmarks[PoseLandmark.RIGHT_KNEE]
         
         # Check visibility
         min_vis = min(
@@ -59,11 +67,32 @@ class PushUpExercise(BaseExercise):
         height_diff_hip_ankle = abs(hip_avg_y - ankle_avg_y)
         
         # Body should be relatively horizontal
-        return height_diff_shoulder_hip < 0.3 and height_diff_hip_ankle < 0.3
+        if not (height_diff_shoulder_hip < 0.3 and height_diff_hip_ankle < 0.3):
+            return False
+        
+        # NEW: Check that person is actually on the ground
+        # Wrists should be low (on ground) - Y coordinate should be high (normalized coords)
+        wrist_avg_y = (left_wrist[1] + right_wrist[1]) / 2
+        
+        # Knees and ankles should also be relatively low (on ground or elevated behind)
+        knee_avg_y = (left_knee[1] + right_knee[1]) / 2
+        
+        # In pushup position, wrists are on ground and should be BELOW (higher Y) the hips
+        # This prevents detecting crouching in air as pushup
+        if wrist_avg_y < hip_avg_y - 0.1:  # Wrists should be below hips
+            return False
+        
+        # Also verify knees are in reasonable position (either on ground or elevated, not floating)
+        # Knees should be at similar level or below hips
+        if knee_avg_y < hip_avg_y - 0.2:  # Knees shouldn't be way above hips
+            return False
+        
+        return True
     
     def detect_phase(self, landmarks: np.ndarray) -> ExercisePhase:
         """
-        Detect push-up phase based on elbow angle.
+        Detect push-up phase based on elbow angle with hysteresis to prevent flickering.
+        Uses clear thresholds: must go clearly DOWN before counting, then clearly UP to complete rep.
         """
         side = get_side_of_body(landmarks)
         
@@ -83,16 +112,28 @@ class PushUpExercise(BaseExercise):
         top_threshold = self.exercise_config['top_elbow_angle']
         bottom_threshold = self.exercise_config['bottom_elbow_angle']
         
-        if elbow_angle > top_threshold - 10:
-            return ExercisePhase.UP
-        elif elbow_angle < bottom_threshold + 15:
-            return ExercisePhase.DOWN
-        else:
-            # Transitioning
-            if self.current_phase == ExercisePhase.UP:
+        # Hysteresis buffer - prevents flickering at boundaries
+        hysteresis = 15  # degrees
+        down_leniency = 25  # Extra leniency for down phase (don't need to go as low)
+        
+        # Determine phase with hysteresis
+        if self.current_phase == ExercisePhase.UP or self.current_phase == ExercisePhase.UNKNOWN:
+            # Currently UP - only switch to DOWN if clearly below threshold
+            # Use extra leniency so you don't need to go all the way down
+            if elbow_angle < bottom_threshold + hysteresis + down_leniency:
+                self._went_to_bottom = True  # Mark that we reached bottom
                 return ExercisePhase.DOWN
             else:
                 return ExercisePhase.UP
+        
+        elif self.current_phase == ExercisePhase.DOWN:
+            # Currently DOWN - only switch to UP if clearly above threshold
+            if elbow_angle > top_threshold - hysteresis:
+                return ExercisePhase.UP
+            else:
+                return ExercisePhase.DOWN
+        
+        return self.current_phase  # Default: maintain current phase
     
     def analyze_form(self, landmarks: np.ndarray) -> List[FormError]:
         """
@@ -148,7 +189,7 @@ class PushUpExercise(BaseExercise):
             return FormError(
                 error_type='hip_sag',
                 severity='high',
-                message='Engage core - hips are sagging',
+                message='Hips are sagging - Core not engaged',
                 value=body_angle
             )
         
@@ -169,7 +210,7 @@ class PushUpExercise(BaseExercise):
             return FormError(
                 error_type='shallow_pushup',
                 severity='medium',
-                message='Go lower - elbows should reach 90 degrees',
+                message='Go lower in your push-up',
                 value=elbow_angle
             )
         
@@ -216,3 +257,26 @@ class PushUpExercise(BaseExercise):
         # Store body length for reference
         self.calibration_data['body_length'] = calculate_distance(shoulder, ankle)
         self.is_calibrated = True
+    
+    def _is_rep_completed(self) -> bool:
+        """
+        Check if a rep was completed.
+        A rep is only complete when:
+        1. User went DOWN (reached bottom position)
+        2. User came back UP (returned to starting position)
+        
+        This prevents counting during continuous motion or staying in one position.
+        """
+        # Rep completes when transitioning from DOWN to UP AND we actually went to bottom
+        if (self.previous_phase == ExercisePhase.DOWN and 
+            self.current_phase == ExercisePhase.UP and
+            self._went_to_bottom):
+            # Reset tracking for next rep
+            self._went_to_bottom = False
+            return True
+        return False
+    
+    def reset(self):
+        """Reset exercise state including pushup-specific tracking."""
+        super().reset()
+        self._went_to_bottom = False

@@ -19,12 +19,14 @@ performance:
 
 # Squat Thresholds
 squat:
-  # Depth thresholds (hip to ankle ratio)
-  depth_shallow_threshold: 0.60  # Above this is shallow
-  depth_parallel_threshold: 0.55  # Parallel squat
-  depth_deep_threshold: 0.50     # Deep squat
+  # Depth thresholds (hip to ankle vertical distance in normalized coordinates)
+  # Higher value = more lenient, catches more shallow squats
+  # When squatting: hips move down toward ankles, reducing vertical distance
+  depth_shallow_threshold: 0.55  # Above this is shallow - increased to detect shallow squats better
+  depth_parallel_threshold: 0.45  # Parallel squat (good depth)
+  depth_deep_threshold: 0.40     # Deep squat (excellent depth)
   
-  # how we'l; decide knee alignment detection
+  # how we'll decide knee alignment detection
   # ─────────────────────────────────────────────────────────────────────
   # KNEE VALGUS (knees caving inward / knock knees)
   #   Current: 0.5 (lenient - catches severe knock knees only)

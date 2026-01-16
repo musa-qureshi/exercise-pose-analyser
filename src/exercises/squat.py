@@ -97,11 +97,13 @@ class SquatExercise(BaseExercise):
         
         # Hysteresis buffer - prevents flickering at boundaries
         hysteresis = 15  # degrees
+        down_leniency = 20  # Extra leniency for down phase (allows shallow squats to count)
         
         # Determine phase with hysteresis
         if self.current_phase == ExercisePhase.UP or self.current_phase == ExercisePhase.UNKNOWN:
             # Currently UP - only switch to DOWN if clearly below threshold
-            if hip_angle < bottom_threshold + hysteresis:
+            # Use extra leniency so shallow squats still trigger DOWN phase
+            if hip_angle < bottom_threshold + hysteresis + down_leniency:
                 self._went_to_bottom = True  # Mark that we reached bottom
                 return ExercisePhase.DOWN
             else:
@@ -162,18 +164,20 @@ class SquatExercise(BaseExercise):
         # Calculate vertical distance ratio
         vertical_dist = abs(hip[1] - ankle[1])
         
-        # Only check depth when in down phase
-        if self.current_phase != ExercisePhase.DOWN:
+        # Check depth when in DOWN phase OR when descending
+        # This shows the message earlier and for longer duration
+        if self.current_phase != ExercisePhase.DOWN and not self._is_descending:
             return None
         
-        # Compare to threshold
+        # Compare to threshold - higher vertical distance means shallower squat
+        # In normalized coordinates, when you squat deeper, hips get closer to ankles (smaller distance)
         shallow_threshold = self.exercise_config['depth_shallow_threshold']
         
         if vertical_dist > shallow_threshold:
             return FormError(
                 error_type='shallow_depth',
                 severity='medium',
-                message='Squat deeper - hips should go below knees',
+                message=f'Squat deeper - hips should go below knees (depth: {vertical_dist:.2f})',
                 value=vertical_dist
             )
         
