@@ -202,12 +202,7 @@ class ExerciseAnalyzer:
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
     
     def run_video(self, video_source: int = 0):
-        """
-        Run analyzer on video source (webcam or video file).
-        
-        Args:
-            video_source: Camera index or video file path
-        """
+        """Run analyzer on webcam (int) or video file path."""
         cap = cv2.VideoCapture(video_source)
         
         if not cap.isOpened():

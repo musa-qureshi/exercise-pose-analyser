@@ -1,6 +1,5 @@
 # Exercise Form Detection System Configuration
 
-# Pose Detection Settings
 pose_detection:
   model_complexity: 1  # 0, 1, or 2 (higher = more accurate but slower)
   min_detection_confidence: 0.5
@@ -17,21 +16,18 @@ performance:
   target_fps: 30
   max_fps: 60
 
-# Squat Thresholds
 squat:
   # Depth thresholds (hip to ankle vertical distance in normalized coordinates)
   # Higher value = more lenient, catches more shallow squats
-  # When squatting: hips move down toward ankles, reducing vertical distance
   depth_shallow_threshold: 0.55  # Above this is shallow - increased to detect shallow squats better
   depth_parallel_threshold: 0.45  # Parallel squat (good depth)
   depth_deep_threshold: 0.40     # Deep squat (excellent depth)
   
   # how we'll decide knee alignment detection
-  # ─────────────────────────────────────────────────────────────────────
   # KNEE VALGUS (knees caving inward / knock knees)
   #   Current: 0.5 (lenient - catches severe knock knees only)
   #   Stricter: 0.75-0.85 (catches minor inward collapse)
-  #   Perfect form: 0.9+ (knees must stay directly over ankles, this is quite hard, not practical as I saw)
+  #   Perfect form: 0.9+ (knees must stay directly over ankles, this is quite hard, not practical)
   knee_valgus_threshold: 0.5
   
   # KNEE SPREAD (knees too wide / rhombus legs)
@@ -39,56 +35,35 @@ squat:
   #   Stricter: 1.6-1.8 (catches moderate spread)
   #   Perfect form: 1.4-1.5 (knees must track over toes precisely, again too hard but recommended by ai)
   knee_spread_threshold: 2.4
-  # ─────────────────────────────────────────────────────────────────────
   
-  # FOOT ANGLE (feet pointing inward/outward)
-  # ─────────────────────────────────────────────────────────────────────
-  # We measure the angle each foot makes relative to "forward" (straight ahead).
-  # Positive = outward (duck feet), Negative = inward (pigeon toed).
-  # Natural stance: feet can be 0-30° outward comfortably.
-  # 
   # foot_outward_threshold: max degrees outward before warning
-  #   Current: 50 (lenient - only catches very duck-footed stance)
+  #   Current: 60 (lenient - only catches very duck-footed stance)
   #   Stricter: 35-40 (catches moderate external rotation)
-  #   Note: 90° would be perpendicular/sideways
   foot_outward_threshold: 60
   
   # foot_inward_threshold: max degrees inward before warning
   #   Current: 20 (catches pigeon-toed stance)
   #   Stricter: 10-15 (catches minor internal rotation)
-  #   Note: Inward feet are generally worse for knee health
   foot_inward_threshold: 20
-  # ─────────────────────────────────────────────────────────────────────
   
-  # Forward lean (torso angle from vertical)
-  forward_lean_threshold: 45  # degrees
+  forward_lean_threshold: 10  # degrees
   
   # Phase detection
-  standing_hip_angle: 160  # Hip angle when standing
-  bottom_hip_angle: 110    # Hip angle at bottom position (higher = easier, lower = deeper squat required)
+  standing_hip_angle: 160 
+  bottom_hip_angle: 110    #(higher = easier, lower = deeper squat required)
 
-# Push-up Thresholds
 pushup:
-  # Hip sag detection (hip drop from straight line)
-  hip_sag_threshold: 15  # degrees from straight
+  hip_sag_threshold: 20 
   
   # Range of motion (elbow angle)
   top_elbow_angle: 160    # Arms extended
   bottom_elbow_angle: 90  # Bottom position
-  shallow_threshold: 110  # Incomplete ROM
-  
-  # Elbow flare (angle from body)
-  elbow_flare_threshold: 45  # degrees
+  shallow_threshold: 100  # Incomplete ROM
 
 # Lunge Thresholds
-# -----------------------------------------------------------------------------
 # CAMERA POSITIONING: Stand SIDEWAYS to camera (your left or right side facing it)
-# This allows the system to see your front and back leg positions clearly.
 # The system will NOT detect lunges if you're facing the camera directly.
-# -----------------------------------------------------------------------------
 lunge:
-  # Sideways detection - shoulder/hip width threshold
-  # When sideways, shoulders appear narrow. This prevents squats being detected as lunges.
   # Lower = stricter (must be more sideways), Higher = more lenient
   sideways_threshold: 0.12
   
@@ -96,60 +71,43 @@ lunge:
   # Feet must be this far apart front-to-back to count as a lunge
   # Also: X separation must be GREATER than Y separation (prevents squat detection)
   min_foot_separation: 0.10
-
-  # ============================================================================
-  # FORM CHECKS (warnings only - don't prevent rep counting)
-  # ============================================================================
   
   # Front knee alignment (horizontal distance knee goes past ankle)
-  # ----------------------------------------------------------------------------
   # EASIER: 0.20+ (allows knee to travel forward)
   # MODERATE: 0.15 (current)
   # HARDER: 0.08-0.10 (knee must stay directly over ankle)
   knee_over_toe_threshold: 0.15
   
   # Back knee depth (vertical distance from back knee to ground/ankle)
-  # ----------------------------------------------------------------------------
-  # The back knee should drop close to the ground for a proper lunge.
   # EASIER: 0.40-0.50 (knee can stay high)
   # MODERATE: 0.25-0.35 (knee must drop noticeably)
   # HARDER: 0.15-0.20 (knee must nearly touch ground)
   depth_threshold: 0.25
   
   # Back leg extension (horizontal distance from back knee to front heel)
-  # ----------------------------------------------------------------------------
-  # Ensures back leg isn't too straight. Back knee should drop down 
-  # relatively close to (but behind) the front foot.
   # EASIER: 0.35+ (allows very extended back leg)
   # MODERATE: 0.28-0.32 (back knee reasonably close)
   # HARDER: 0.18-0.22 (back knee must be close to front heel)
   back_knee_max_distance: 0.30
   
   # Torso lean (angle from vertical - catches BOTH forward and backward lean)
-  # ----------------------------------------------------------------------------
   # EASIER: 40-50 degrees (allows significant lean)
   # MODERATE: 25-35 degrees (some lean allowed)
   # HARDER: 15-20 degrees (torso must stay very upright)
   torso_lean_threshold: 20
   
-  # ============================================================================
   # PHASE DETECTION (controls when a rep counts)
-  # ============================================================================
-  
   # standing_front_knee_angle: Angle above which you're considered "UP"
-  # ----------------------------------------------------------------------------
   # EASIER: 130-140 degrees (don't need to straighten leg much)
   # HARDER: 150-160 degrees (must fully straighten front leg)
   standing_front_knee_angle: 140
   
   # lunge_front_knee_angle: Angle below which you're considered "DOWN"
-  # ----------------------------------------------------------------------------
   # EASIER: 130-140 degrees (shallow lunge counts)
   # MODERATE: 110-120 degrees (decent depth required)
   # HARDER: 90-100 degrees (must reach proper 90 degree lunge)
   lunge_front_knee_angle: 115
 
-# Visualization
 visualization:
   show_skeleton: true
   show_landmarks: true
@@ -158,14 +116,12 @@ visualization:
   feedback_font_scale: 0.7
   feedback_font_thickness: 2
 
-# Logging
 logging:
   enabled: true
   output_directory: "logs"
   session_prefix: "exercise_session"
   
-# Calibration
 calibration:
   enabled: true
-  required_frames: 60  # Frames to collect for calibration
+  required_frames: 60
   standing_pose_required: true
