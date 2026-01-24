@@ -10,7 +10,7 @@ Production-grade real-time exercise form detection and feedback system using sin
 🔢 **Accurate Rep Counting** - Automatic repetition counting based on phase transitions  
 ⚠️ **Form Error Detection** - Identifies and provides feedback on:
 - **Squat**: Knee valgus, shallow depth, excessive forward lean
-- **Push-up**: Sagging hips, incomplete ROM, elbow flare
+- **Push-up**: Sagging hips, incomplete ROM
 - **Lunge**: Knee over toe, insufficient depth, torso lean
 
 🎨 **Visual Feedback** - Real-time pose overlay and text feedback  
@@ -121,7 +121,7 @@ Edit `config.yaml` to customize detection thresholds and behavior:
 **Exercise Thresholds:**
 Each exercise has specific thresholds for form analysis:
 - **Squat**: Depth thresholds, knee valgus angle, forward lean angle
-- **Push-up**: Hip sag threshold, ROM angles, elbow flare threshold
+- **Push-up**: Hip sag threshold, ROM angles
 - **Lunge**: Knee alignment, depth threshold, torso lean angle
 
 **Performance:**
@@ -196,7 +196,6 @@ pose-based-exercise-analyser/
 ### Push-up
 1. **Hip Sag** - Detects broken plank position
 2. **Incomplete ROM** - Ensures elbows reach 90°
-3. **Elbow Flare** - Checks elbow position relative to body
 
 ### Lunge
 1. **Knee Over Toe** - Ensures front knee stays over ankle

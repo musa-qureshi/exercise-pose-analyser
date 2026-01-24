@@ -25,7 +25,6 @@ Successfully implemented a production-quality single-camera exercise form detect
 **Push-up:**
 - Sagging hips (broken plank)
 - Incomplete range of motion
-- Elbow flare
 
 **Lunge:**
 - Knee over toe alignment
