@@ -72,17 +72,25 @@ lunge:
   # Also: X separation must be GREATER than Y separation (prevents squat detection)
   min_foot_separation: 0.10
   
-  # Front knee alignment (horizontal distance knee goes past ankle)
-  # EASIER: 0.20+ (allows knee to travel forward)
-  # MODERATE: 0.15 (current)
-  # HARDER: 0.08-0.10 (knee must stay directly over ankle)
-  knee_over_toe_threshold: 0.15
+  # Front knee alignment (how far knee extends FORWARD past ankle)
+  # ----------------------------------------------------------------------------
+  # Measures horizontal distance knee goes PAST the ankle (directional, not absolute)
+  # EASIER: 0.12-0.15 (allows knee to travel forward more)
+  # MODERATE: 0.08-0.10 (some forward travel allowed)
+  # HARDER: 0.05-0.07 (knee must stay almost directly over ankle)
+  knee_over_toe_threshold: 0.08
   
-  # Back knee depth (vertical distance from back knee to ground/ankle)
-  # EASIER: 0.40-0.50 (knee can stay high)
-  # MODERATE: 0.25-0.35 (knee must drop noticeably)
-  # HARDER: 0.15-0.20 (knee must nearly touch ground)
-  depth_threshold: 0.25
+  # Back knee depth (vertical height of back knee above ground)
+  # ----------------------------------------------------------------------------
+  # Measures how high the back knee is above ground level (front ankle position)
+  # In normalized coords, this is the Y difference from knee to ground
+  # Error shows when knee height above ground > threshold
+  # LOWER VALUE = STRICTER (error persists longer, knee must drop closer to ground)
+  # HIGHER VALUE = MORE LENIENT (error clears sooner)
+  # STRICT: 0.08-0.12 (knee must drop very close to ground)
+  # MODERATE: 0.15-0.20 (knee must drop noticeably) 
+  # LENIENT: 0.25-0.30 (knee doesn't have to go very low)
+  depth_threshold: 0.15
   
   # Back leg extension (horizontal distance from back knee to front heel)
   # EASIER: 0.35+ (allows very extended back leg)
@@ -91,10 +99,12 @@ lunge:
   back_knee_max_distance: 0.30
   
   # Torso lean (angle from vertical - catches BOTH forward and backward lean)
-  # EASIER: 40-50 degrees (allows significant lean)
-  # MODERATE: 25-35 degrees (some lean allowed)
-  # HARDER: 15-20 degrees (torso must stay very upright)
-  torso_lean_threshold: 20
+  # ----------------------------------------------------------------------------
+  # Only triggers for SIGNIFICANT lean - some lean is natural during lunges
+  # EASIER: 45-50 degrees (only warns for extreme lean)
+  # MODERATE: 35-40 degrees (warns for noticeable lean)
+  # HARDER: 25-30 degrees (strict upright posture required)
+  torso_lean_threshold: 15
   
   # PHASE DETECTION (controls when a rep counts)
   # standing_front_knee_angle: Angle above which you're considered "UP"
