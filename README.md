@@ -1,279 +1,145 @@
 # Exercise Form Detection System
 
-Production-grade real-time exercise form detection and feedback system using single-camera pose estimation with temporal modeling. Provides intelligent form analysis, rep counting, and actionable feedback for squat, push-up, and lunge exercises.
+Real-time exercise form analysis using MediaPipe pose estimation. Provides automatic rep counting and form feedback for squats, push-ups, and lunges.
 
 ## Features
 
-✨ **Real-time Pose Estimation** using MediaPipe with temporal smoothing for stable tracking  
-🎯 **Exercise Classification** - Automatically detects squat, push-up, and lunge exercises  
-📊 **Phase Segmentation** - Tracks exercise phases (up, down, hold)  
-🔢 **Accurate Rep Counting** - Automatic repetition counting based on phase transitions  
-⚠️ **Form Error Detection** - Identifies and provides feedback on:
-- **Squat**: Knee valgus, shallow depth, excessive forward lean
-- **Push-up**: Sagging hips, incomplete ROM
-- **Lunge**: Knee over toe, insufficient depth, torso lean
+- **Real-time Pose Tracking** - MediaPipe-based pose detection with temporal smoothing
+- **Live Exercise Switching** - Toggle between exercises with keyboard shortcuts (P/S/L)
+- **Automatic Rep Counting** - Phase-based repetition tracking
+- **Form Analysis** - Real-time feedback on common form errors
+- **Visual Feedback** - Pose overlay with on-screen exercise selector
+- **Session Logging** - CSV export of exercise data
+- **Configurable** - YAML-based threshold adjustment
 
-🎨 **Visual Feedback** - Real-time pose overlay and text feedback  
-👤 **User Calibration** - Automatic calibration to user's body proportions  
-📝 **CSV Logging** - Session data logging for analysis  
-⚙️ **Config-driven** - Easily adjustable thresholds via YAML  
-🏗️ **Modular Design** - Clean, extensible architecture  
-⚡ **High Performance** - Optimized for ≥20 FPS on standard hardware
+## Quick Start
 
-## Installation
+See [QUICKSTART.md](QUICKSTART.md) for installation and first run.
 
-### Prerequisites
-- **Python 3.9+** (including Python 3.13)
-- Webcam or video file for input
-- (Optional) CUDA-capable GPU for better performance
-
-### Setup
-
-1. Clone the repository:
-```bash
-git clone https://github.com/musa-qureshi/pose-based-exercise-analyser.git
-cd pose-based-exercise-analyser
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-**Note:** On first run, the app will automatically download the MediaPipe pose model (~30MB).
-
-## Usage
-
-### Basic Usage
-
-Run with default settings (squat exercise, webcam):
 ```bash
 python main.py
 ```
 
-### Specify Exercise Type
+Use **P/S/L** keys to switch between Push-ups, Squats, and Lunges.
 
-Analyze push-ups:
+## Quick Start
+
+See [QUICKSTART.md](QUICKSTART.md) for installation and first run.
+
 ```bash
-python main.py --exercise pushup
+python main.py
 ```
 
-Analyze lunges:
+Use **P/S/L** keys to switch between Push-ups, Squats, and Lunges.
+
+## Command-Line Options
+
 ```bash
-python main.py --exercise lunge
+python main.py [--source SOURCE] [--config CONFIG]
 ```
 
-### Use Video File
+**Arguments:**
+- `--source, -s` - Video source: camera index (0, 1) or file path (default: 0)
+- `--config, -c` - Config file path (default: config.yaml)
 
-Analyze from video file instead of webcam:
+**Examples:**
 ```bash
-python main.py --exercise squat --source path/to/video.mp4
+# Webcam (default)
+python main.py
+
+# Different camera
+python main.py --source 1
+
+# Video file
+python main.py --source workout.mp4
+
+# Custom config
+python main.py --config custom.yaml
 ```
 
-### Custom Configuration
+## Interactive Controls
 
-Use custom configuration file:
-```bash
-python main.py --config my_config.yaml
-```
+- **P** - Switch to Push-ups
+- **S** - Switch to Squats
+- **L** - Switch to Lunges
+- **Q** - Quit
+- **R** - Reset rep count
+- **C** - Recalibrate
 
-### Command-Line Options
-
-```
-usage: main.py [-h] [--exercise {squat,pushup,push-up,lunge}] 
-               [--source SOURCE] [--config CONFIG]
-
-Real-time Exercise Form Detection System
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --exercise {squat,pushup,push-up,lunge}, -e
-                        Exercise type to detect (default: squat)
-  --source SOURCE, -s SOURCE
-                        Video source: camera index (0, 1, ...) or 
-                        video file path (default: 0)
-  --config CONFIG, -c CONFIG
-                        Path to configuration file (default: config.yaml)
-```
-
-### Interactive Controls
-
-While running:
-- **'q'** - Quit the application
-- **'r'** - Reset rep count
-- **'c'** - Recalibrate
+Active exercise appears in green in bottom-right corner.
 
 ## Configuration
 
-Edit `config.yaml` to customize detection thresholds and behavior:
-
-### Key Configuration Sections
+Edit `config.yaml` to customize detection behavior:
 
 **Pose Detection:**
-- `model_complexity`: 0-2 (higher = more accurate but slower)
-- `min_detection_confidence`: Detection confidence threshold (0-1)
-- `min_tracking_confidence`: Tracking confidence threshold (0-1)
+- `model_complexity`: 0 (fast), 1 (balanced), 2 (accurate)
+- `min_detection_confidence`: Initial detection threshold (0-1)
+- `min_tracking_confidence`: Frame tracking threshold (0-1)
 
 **Temporal Smoothing:**
-- `enabled`: Enable/disable smoothing
-- `window_size`: Number of frames to average (higher = smoother but more lag)
+- `enabled`: Smooth tracking across frames
+- `window_size`: Number of frames to average
 
 **Exercise Thresholds:**
-Each exercise has specific thresholds for form analysis:
-- **Squat**: Depth thresholds, knee valgus angle, forward lean angle
-- **Push-up**: Hip sag threshold, ROM angles
-- **Lunge**: Knee alignment, depth threshold, torso lean angle
+Each exercise has configurable thresholds for phase detection and form analysis. See `config.yaml` comments for detailed explanations.
 
 **Performance:**
-- `target_fps`: Target frames per second
-- `max_fps`: Maximum FPS cap
+- `target_fps`: Limit processing speed (0 = unlimited)
 
 **Logging:**
-- `enabled`: Enable/disable CSV logging
-- `output_directory`: Directory for log files
-- `session_prefix`: Prefix for log filenames
+- `enabled`: Enable CSV session logging
+- `output_directory`: Where to save logs
 
-## Architecture
+## Form Errors Detected
 
-### Project Structure
+### Squat (Front-Facing Camera)
+- **Knee Valgus** - Knees caving inward
+- **Knee Spread** - Knees too wide apart
+- **Forward Lean** - Excessive torso lean
+- **Foot Angle** - Feet pointing too far inward/outward
 
-```
-pose-based-exercise-analyser/
-├── main.py                    # Main application entry point
-├── config.yaml               # Configuration file
-├── requirements.txt          # Python dependencies
-├── README.md                 # Documentation
-│
-├── src/
-│   ├── pose_detector/       # Pose detection module
-│   │   └── pose_detector.py # MediaPipe pose detection with smoothing
-│   │
-│   ├── exercises/           # Exercise analysis modules
-│   │   ├── base_exercise.py # Abstract base class for exercises
-│   │   ├── squat.py        # Squat analysis
-│   │   ├── pushup.py       # Push-up analysis
-│   │   └── lunge.py        # Lunge analysis
-│   │
-│   └── utils/              # Utility modules
-│       ├── geometry.py     # Angle and distance calculations
-│       ├── config_loader.py # Configuration loading
-│       └── logger.py       # CSV session logging
-│
-└── logs/                   # Session logs (created at runtime)
-```
+### Push-up (Sideways Camera)
+- **Hip Sag** - Hips dropping (core not engaged)
+- **Shallow Range** - Not lowering enough
 
-### Key Components
-
-**PoseDetector** (`src/pose_detector/`)
-- MediaPipe-based pose detection
-- Temporal smoothing for stability
-- Landmark extraction and visualization
-
-**Exercise Analyzers** (`src/exercises/`)
-- Base class defining exercise interface
-- Exercise-specific implementations (squat, push-up, lunge)
-- Phase detection and rep counting
-- Form error detection with severity levels
-
-**Geometry Utilities** (`src/utils/geometry.py`)
-- Angle calculations
-- Distance measurements
-- Body side detection
-- Landmark normalization
-
-**Session Logger** (`src/utils/logger.py`)
-- CSV logging of frame-by-frame data
-- Session summary statistics
-- Performance metrics
-
-## Form Error Detection
-
-### Squat
-1. **Knee Valgus** - Detects knees caving inward
-2. **Shallow Depth** - Ensures hips go below parallel
-3. **Forward Lean** - Checks for excessive torso lean
-
-### Push-up
-1. **Hip Sag** - Detects broken plank position
-2. **Incomplete ROM** - Ensures elbows reach 90°
-
-### Lunge
-1. **Knee Over Toe** - Ensures front knee stays over ankle
-2. **Insufficient Depth** - Checks back knee approaches ground
-3. **Torso Lean** - Maintains upright torso position
-
-## Performance Optimization
-
-The system is optimized for ≥20 FPS on standard hardware:
-
-- Efficient MediaPipe Pose model (complexity level 1 by default)
-- Temporal smoothing with small window (5 frames)
-- Minimal overhead processing
-- Configurable FPS targeting
-
-**Tips for better performance:**
-- Lower `model_complexity` to 0 for faster processing
-- Reduce video resolution if needed
-- Ensure good lighting for better pose detection
-- Use a solid background for easier detection
-
-## Extending the System
-
-### Adding a New Exercise
-
-1. Create new exercise class inheriting from `BaseExercise`
-2. Implement required methods:
-   - `detect_exercise()` - Detect if exercise is being performed
-   - `detect_phase()` - Determine current phase
-   - `analyze_form()` - Detect form errors
-3. Add configuration section to `config.yaml`
-4. Register in `main.py` exercise map
-
-Example:
-```python
-from src.exercises.base_exercise import BaseExercise, ExercisePhase, FormError
-
-class MyExercise(BaseExercise):
-    def __init__(self, config):
-        super().__init__(config)
-        self.exercise_config = config['my_exercise']
-        self.name = "My Exercise"
-    
-    def detect_exercise(self, landmarks):
-        # Implementation
-        pass
-    
-    def detect_phase(self, landmarks):
-        # Implementation
-        pass
-    
-    def analyze_form(self, landmarks):
-        # Implementation
-        pass
-```
+### Lunge (Sideways Camera)
+- **Knee Over Toe** - Front knee too far forward
+- **Shallow Depth** - Back knee not dropping low enough
+- **Torso Lean** - Leaning too far forward/back
 
 ## Troubleshooting
 
-**Low FPS:**
-- Reduce `model_complexity` in config.yaml
-- Close other applications
-- Ensure good lighting
+**Low FPS:** Set `model_complexity: 0` in config.yaml
 
-**Pose Not Detected:**
-- Ensure full body is visible in frame
-- Check lighting conditions
-- Move closer or adjust camera angle
-- Ensure plain background
+**Pose Not Detected:** Ensure full body visible, good lighting, plain background
 
-**Inaccurate Rep Counting:**
-- Adjust phase detection thresholds in config.yaml
-- Ensure complete range of motion
-- Recalibrate using 'c' key
+**Reps Not Counting:** Complete full range of motion, recalibrate with C
 
-**Form Errors Not Detected:**
-- Adjust sensitivity thresholds in config.yaml
-- Ensure proper camera angle (side view for most exercises)
-- Check that relevant body parts are visible
+**Lunges Not Detecting:** Stand sideways to camera (perpendicular, not facing it)
+
+**Form Errors Too Sensitive:** Adjust thresholds in config.yaml for specific exercise
+
+## Project Structure
+
+```
+src/
+├── pose_detector/      # MediaPipe pose detection
+├── exercises/          # Exercise analyzers (squat, pushup, lunge)
+└── utils/             # Geometry, config, logging
+```
+
+## Extending
+
+To add a new exercise:
+1. Create class inheriting from `BaseExercise`
+2. Implement `detect_exercise()`, `detect_phase()`, `analyze_form()`
+3. Add config section to `config.yaml`
+4. Register in `main.py`
+
+## License
+
+MIT License
 
 ## Requirements
 
@@ -281,17 +147,3 @@ class MyExercise(BaseExercise):
 - mediapipe >= 0.10.0
 - numpy >= 1.24.0
 - pyyaml >= 6.0
-
-## License
-
-MIT License - See LICENSE file for details
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Acknowledgments
-
-- MediaPipe for pose estimation
-- OpenCV for video processing
-- The open-source community

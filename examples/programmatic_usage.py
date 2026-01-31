@@ -23,18 +23,17 @@ def analyze_video_file(video_path: str, exercise_type: str = 'squat'):
         exercise_type=exercise_type
     )
     
-    # Open video
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Error: Could not open video: {video_path}")
         return
     
-    # Get video properties
+    # video properties
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     
-    # Setup output video writer
+    #output video writer
     output_path = f"output_{exercise_type}.avi"
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
@@ -50,10 +49,8 @@ def analyze_video_file(video_path: str, exercise_type: str = 'squat'):
             if not ret:
                 break
             
-            # Process frame
             processed_frame, exercise_state = analyzer.process_frame(frame)
             
-            # Write to output
             out.write(processed_frame)
             
             frame_count += 1
@@ -74,17 +71,10 @@ def analyze_video_file(video_path: str, exercise_type: str = 'squat'):
 
 
 def analyze_webcam_with_callback(exercise_type: str = 'squat'):
-    """
-    Analyze webcam feed with custom callback for form errors.
-    
-    Args:
-        exercise_type: Type of exercise to analyze
-    """
     def on_form_error(error):
         """Callback function when form error is detected."""
         print(f"⚠️  Form Error: {error.error_type} - {error.message}")
     
-    # Initialize analyzer
     analyzer = ExerciseAnalyzer(
         config_path='config.yaml',
         exercise_type=exercise_type
@@ -101,15 +91,12 @@ def analyze_webcam_with_callback(exercise_type: str = 'squat'):
             if not ret:
                 break
             
-            # Process frame
             processed_frame, exercise_state = analyzer.process_frame(frame)
             
-            # Check for form errors and call callback
             if exercise_state and exercise_state.get('form_errors'):
                 for error in exercise_state['form_errors']:
                     on_form_error(error)
             
-            # Display
             cv2.imshow('Exercise Analysis', processed_frame)
             
             if cv2.waitKey(1) & 0xFF == ord('q'):

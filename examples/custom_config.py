@@ -15,18 +15,16 @@ shutil.copy('config.yaml', 'config_custom.yaml')
 with open('config_custom.yaml', 'r') as f:
     config = yaml.safe_load(f)
 
-# Make squats easier (less strict)
+# squats
 config['squat']['depth_shallow_threshold'] = 0.65  # Allow shallower squats
 config['squat']['knee_valgus_threshold'] = 20      # More lenient on knee valgus
 
-# Make push-ups stricter
+# push-ups
 config['pushup']['bottom_elbow_angle'] = 85        # Must go deeper
 config['pushup']['hip_sag_threshold'] = 10         # Less tolerance for hip sag
 
-# Adjust visualization
 config['visualization']['feedback_font_scale'] = 0.9  # Bigger text
 
-# Save custom config
 with open('config_custom.yaml', 'w') as f:
     yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 

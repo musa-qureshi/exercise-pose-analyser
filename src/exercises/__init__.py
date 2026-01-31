@@ -1,4 +1,3 @@
-"""Exercises package"""
 from .base_exercise import BaseExercise, ExercisePhase, FormError
 from .squat import SquatExercise
 from .pushup import PushUpExercise

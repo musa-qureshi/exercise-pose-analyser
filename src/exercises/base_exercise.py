@@ -18,13 +18,10 @@ class ExercisePhase(Enum):
     HOLD = "hold"
 
 
-class FormError:
-    """Represents a form error detected during exercise."""
-    
+class FormError:    
     def __init__(self, error_type: str, severity: str, message: str, value: Optional[float] = None):
         """
         Initialize form error.
-        
         Args:
             error_type: Type of error (e.g., 'knee_valgus', 'shallow_depth')
             severity: 'low', 'medium', or 'high'
@@ -41,17 +38,7 @@ class FormError:
 
 
 class BaseExercise(ABC):
-    """
-    Abstract base class for exercise detection and analysis.
-    """
-    
     def __init__(self, config: dict):
-        """
-        Initialize exercise analyzer.
-        
-        Args:
-            config: Configuration dictionary
-        """
         self.config = config
         self.exercise_config = None  # Set by subclass
         
@@ -114,7 +101,6 @@ class BaseExercise(ABC):
         Returns:
             Dictionary containing exercise state information
         """
-        # Detect exercise
         exercise_detected = self.detect_exercise(landmarks)
         
         if not exercise_detected:
@@ -125,11 +111,9 @@ class BaseExercise(ABC):
                 'form_errors': []
             }
         
-        # Update phase
         self.previous_phase = self.current_phase
-        self.current_phase = self.detect_phase(landmarks)
+        self.current_phase = self.detect_phase(landmarks)  #Update phase
         
-        # Check for rep completion
         if self._is_rep_completed():
             self.rep_count += 1
         
@@ -145,10 +129,8 @@ class BaseExercise(ABC):
     
     def _is_rep_completed(self) -> bool:
         """
-        Check if a rep was completed based on phase transition.
-        
-        Returns:
-            True if rep completed
+        Check if a rep was completed based on phase transition. Returns
+        True if rep completed
         """
         # Rep completes when returning to ready/up position from down position
         return (
@@ -157,29 +139,16 @@ class BaseExercise(ABC):
         )
     
     def calibrate(self, landmarks: np.ndarray):
-        """
-        Calibrate exercise-specific parameters based on user's body.
-        
-        Args:
-            landmarks: Pose landmarks array from standing position
-        """
         # Subclasses can override for specific calibration
         self.is_calibrated = True
     
     def reset(self):
-        """Reset exercise state."""
         self.current_phase = ExercisePhase.UNKNOWN
         self.previous_phase = ExercisePhase.UNKNOWN
         self.rep_count = 0
         self.form_errors = []
     
     def get_feedback_text(self) -> List[str]:
-        """
-        Generate human-readable feedback messages.
-        
-        Returns:
-            List of feedback strings
-        """
         feedback = []
         
         # Add rep count

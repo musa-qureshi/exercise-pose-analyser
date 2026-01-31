@@ -2,19 +2,16 @@
 Exercise Form Detection System
 Main application for real-time exercise form detection and feedback.
 """
-
-# Suppress warnings before any other imports
 import os
 import sys
 
-# Force unbuffered output so messages appear immediately
+#unbuffered output so messages appear immediately
 os.environ['PYTHONUNBUFFERED'] = '1'
 os.environ['PYTHONWARNINGS'] = 'ignore'
 
 import warnings
 warnings.filterwarnings('ignore')
 
-# Force output flushing
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(line_buffering=True)
 
@@ -31,19 +28,13 @@ from src.utils.logger import SessionLogger
 
 
 class ExerciseAnalyzer:
-    """
-    Main application class for exercise form detection and analysis.
-    """
-    
     def __init__(self, config_path: str = 'config.yaml', exercise_type: str = 'lunge'):
         """
         Initialize the exercise analyzer.
-        
         Args:
             config_path: Path to configuration file
             exercise_type: Type of exercise ('squat', 'pushup', 'lunge')
         """
-        # Load configuration
         self.config = load_config(config_path)
         
         # Initialize pose detector
@@ -69,7 +60,6 @@ class ExerciseAnalyzer:
         print(f"Target FPS: {self.config['performance']['target_fps']}")
     
     def _create_exercise(self, exercise_type: str):
-        """Create exercise analyzer based on type."""
         exercise_map = {
             'squat': SquatExercise,
             'pushup': PushUpExercise,
@@ -83,22 +73,19 @@ class ExerciseAnalyzer:
         
         return exercise_map[exercise_type](self.config)
     
+    def switch_exercise(self, exercise_type: str):
+        self.exercise_type = exercise_type.lower()
+        self.exercise = self._create_exercise(self.exercise_type)
+        self.is_calibrated = False
+        self.calibration_frames = 0
+        print(f"\nSwitched to: {self.exercise.name}")
+    
     def calibrate_frame(self, landmarks: np.ndarray) -> bool:
-        """
-        Process calibration frame.
-        
-        Args:
-            landmarks: Pose landmarks
-            
-        Returns:
-            True if calibration complete
-        """
         if self.is_calibrated:
             return True
         
         self.calibration_frames += 1
         
-        # Calibrate on first valid frame
         if self.calibration_frames == 1:
             self.exercise.calibrate(landmarks)
             self.is_calibrated = True
@@ -109,13 +96,8 @@ class ExerciseAnalyzer:
     
     def process_frame(self, frame: np.ndarray) -> tuple:
         """
-        Process a single frame.
-        
-        Args:
-            frame: Input BGR frame
-            
-        Returns:
-            Tuple of (processed frame, exercise state)
+        Process a single frame, takes frame: Input BGR frame as arg, and returns
+        tuple of (processed frame, exercise state)
         """
         start_time = time.time()
         
@@ -125,7 +107,6 @@ class ExerciseAnalyzer:
         exercise_state = None
         
         if detected and landmarks is not None:
-            # Calibration phase
             if not self.is_calibrated:
                 self.calibrate_frame(landmarks)
                 self._draw_calibration_message(frame)
@@ -144,20 +125,19 @@ class ExerciseAnalyzer:
         else:
             self._draw_no_pose_message(frame)
         
-        # Calculate FPS
-        frame_time = time.time() - start_time
+        frame_time = time.time() - start_time  # Calculate FPS
         self.frame_times.append(frame_time)
         if len(self.frame_times) > 30:
             self.frame_times.pop(0)
         self.fps = 1.0 / (sum(self.frame_times) / len(self.frame_times))
         
-        # Draw FPS
         self._draw_fps(frame)
+        
+        self._draw_exercise_selector(frame)
         
         return frame, exercise_state
     
     def _draw_feedback(self, frame: np.ndarray, exercise_state: Dict):
-        """Draw exercise feedback on frame."""
         if not exercise_state or not exercise_state['exercise_detected']:
             cv2.putText(frame, "Exercise not detected", (10, 60),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
@@ -171,7 +151,6 @@ class ExerciseAnalyzer:
         
         y_offset = 30
         for i, line in enumerate(feedback_lines):
-            # Color based on content
             if 'Issue' in line or 'Error' in line:
                 color = (0, 0, 255)  # Red for errors
             elif 'Good' in line:
@@ -183,26 +162,55 @@ class ExerciseAnalyzer:
                        cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
     
     def _draw_fps(self, frame: np.ndarray):
-        """Draw FPS counter."""
         fps_text = f"FPS: {self.fps:.1f}"
         color = (0, 255, 0) if self.fps >= 20 else (0, 165, 255)
         cv2.putText(frame, fps_text, (frame.shape[1] - 150, 30),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
     
     def _draw_calibration_message(self, frame: np.ndarray):
-        """Draw calibration in progress message."""
         msg = "Calibrating... Stand in starting position"
         cv2.putText(frame, msg, (10, 60),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
     
     def _draw_no_pose_message(self, frame: np.ndarray):
-        """Draw no pose detected message."""
         msg = "No pose detected - ensure full body is visible"
         cv2.putText(frame, msg, (10, 60),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
     
+    def _draw_exercise_selector(self, frame: np.ndarray):
+        height, width = frame.shape[:2]
+        
+        exercises = [
+            ('P', 'Push-up', 'pushup'),
+            ('S', 'Squat', 'squat'),
+            ('L', 'Lunge', 'lunge')
+        ]
+        
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.5
+        thickness = 1
+        padding = 8
+        line_height = 25
+        
+        start_y = height - len(exercises) * line_height - padding
+        
+        for i, (hotkey, name, ex_type) in enumerate(exercises):
+            y_pos = start_y + i * line_height
+            
+            if ex_type == self.exercise_type or (ex_type == 'pushup' and self.exercise_type == 'push-up'):
+                color = (0, 255, 0)  # Green for active
+                text = f"[{hotkey}] {name}"
+            else:
+                color = (128, 128, 128)  # Gray for inactive
+                text = f" {hotkey}  {name}"
+            
+            (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, thickness)
+            x_pos = width - text_width - padding
+            
+            cv2.putText(frame, text, (x_pos, y_pos),
+                       font, font_scale, color, thickness, cv2.LINE_AA)
+    
     def run_video(self, video_source: int = 0):
-        """Run analyzer on webcam (int) or video file path."""
         cap = cv2.VideoCapture(video_source)
         
         if not cap.isOpened():
@@ -212,7 +220,8 @@ class ExerciseAnalyzer:
         print("\n=== Exercise Form Detection Started ===")
         print(f"Exercise: {self.exercise.name}")
         print("Press 'q' to quit, 'r' to reset rep count, 'c' to recalibrate")
-        print("=" * 45 + "\n")
+        print("Press 'p' for Push-ups, 's' for Squats, 'l' for Lunges")
+        print("=" * 60 + "\n")
         
         # Create window and bring to front
         window_name = 'Exercise Form Detection'
@@ -231,17 +240,23 @@ class ExerciseAnalyzer:
                 # Display
                 cv2.imshow(window_name, frame)
                 
-                # Handle key presses
+                # handle all valid key presses
                 key = cv2.waitKey(1) & 0xFF
-                if key == ord('q'):
+                if key == ord('q') or key == ord('Q'):
                     break
-                elif key == ord('r'):
+                elif key == ord('r') or key == ord('R'):
                     self.exercise.reset()
                     print("Rep count reset")
-                elif key == ord('c'):
+                elif key == ord('c') or key == ord('C'):
                     self.is_calibrated = False
                     self.calibration_frames = 0
                     print("Recalibrating...")
+                elif key == ord('p') or key == ord('P'):
+                    self.switch_exercise('pushup')
+                elif key == ord('s') or key == ord('S'):
+                    self.switch_exercise('squat')
+                elif key == ord('l') or key == ord('L'):
+                    self.switch_exercise('lunge')
                 
                 # FPS limiting (optional)
                 target_fps = self.config['performance']['target_fps']
@@ -254,7 +269,6 @@ class ExerciseAnalyzer:
             self.cleanup()
     
     def cleanup(self):
-        """Clean up resources."""
         self.logger.close()
         self.pose_detector.release()
         print("\nExercise session ended.")
@@ -265,13 +279,6 @@ def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Real-time Exercise Form Detection System'
-    )
-    parser.add_argument(
-        '--exercise', '-e',
-        type=str,
-        default='lunge',
-        choices=['squat', 'pushup', 'push-up', 'lunge'],
-        help='Exercise type to detect (default: lunge)'
     )
     parser.add_argument(
         '--source', '-s',
@@ -288,17 +295,15 @@ def main():
     
     args = parser.parse_args()
     
-    # Parse video source
     try:
         video_source = int(args.source)
     except ValueError:
         video_source = args.source
     
-    # Create and run analyzer
     try:
         analyzer = ExerciseAnalyzer(
             config_path=args.config,
-            exercise_type=args.exercise
+            exercise_type='lunge'  # Default start exercise, can switch with P/S/L
         )
         analyzer.run_video(video_source)
     except Exception as e:

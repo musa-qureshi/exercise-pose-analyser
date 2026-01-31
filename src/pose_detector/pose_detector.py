@@ -15,7 +15,6 @@ import mediapipe as mp
 
 @dataclass
 class Landmark:
-    """Simple landmark representation for MediaPipe compatibility."""
     x: float
     y: float
     z: float = 0.0
@@ -24,7 +23,6 @@ class Landmark:
 
 @dataclass
 class PoseLandmarks:
-    """Pose landmarks container for MediaPipe compatibility."""
     landmark: List[Landmark]
 
 
@@ -38,12 +36,6 @@ class PoseDetector:
     """
     
     def __init__(self, config: dict):
-        """
-        Initialize the pose detector.
-        
-        Args:
-            config: Configuration dictionary containing pose detection settings
-        """
         self.config = config
         pose_config = config['pose_detection']
         
@@ -108,7 +100,6 @@ class PoseDetector:
         print("Using MediaPipe Solutions API (legacy)")
     
     def _find_model_file(self) -> str:
-        """Find the pose landmarker model file."""
         # Check common locations
         possible_paths = [
             'models/pose_landmarker.task',
@@ -159,7 +150,6 @@ class PoseDetector:
             return self._detect_old_api(frame)
     
     def _detect_new_api(self, frame: np.ndarray) -> Tuple[Optional[np.ndarray], bool]:
-        """Detect pose using new Tasks API."""
         # Convert BGR to RGB
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         
@@ -186,7 +176,6 @@ class PoseDetector:
         return None, False
     
     def _detect_old_api(self, frame: np.ndarray) -> Tuple[Optional[np.ndarray], bool]:
-        """Detect pose using old Solutions API."""
         # Convert BGR to RGB
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         
@@ -209,15 +198,6 @@ class PoseDetector:
         return None, False
     
     def _smooth_landmarks(self, landmarks: np.ndarray) -> np.ndarray:
-        """
-        Apply temporal smoothing using moving average.
-        
-        Args:
-            landmarks: Current frame landmarks
-            
-        Returns:
-            Smoothed landmarks
-        """
         self.landmark_history.append(landmarks)
         
         if len(self.landmark_history) < 2:
@@ -229,17 +209,6 @@ class PoseDetector:
     
     def draw_pose(self, frame: np.ndarray, landmarks: np.ndarray, 
                   connections: bool = True) -> np.ndarray:
-        """
-        Draw pose landmarks and connections on the frame.
-        
-        Args:
-            frame: Input frame
-            landmarks: Pose landmarks array
-            connections: Whether to draw skeleton connections
-            
-        Returns:
-            Frame with pose visualization
-        """
         if landmarks is None:
             return frame
         
@@ -267,8 +236,7 @@ class PoseDetector:
             (24, 26), (26, 28), (28, 30), (28, 32), (30, 32),
         ]
         
-        # Draw connections
-        if connections:
+        if connections: #draw connections
             for connection in POSE_CONNECTIONS:
                 start_idx, end_idx = connection
                 if start_idx < len(landmarks) and end_idx < len(landmarks):
@@ -280,10 +248,10 @@ class PoseDetector:
                         end_point = (int(landmarks[end_idx][0] * w), int(landmarks[end_idx][1] * h))
                         cv2.line(frame, start_point, end_point, (255, 255, 255), viz_config['line_thickness'])
         
-        # Draw landmarks
+        #draw landmarks
         for i, landmark in enumerate(landmarks):
             x, y, vis = landmark
-            if vis > 0.5:  # Only draw visible landmarks
+            if vis > 0.5:  # Only visible landmarks
                 cv2.circle(frame, (int(x * w), int(y * h)), 
                          viz_config['landmark_radius'], (0, 255, 0), -1)
         
@@ -308,9 +276,7 @@ class PoseDetector:
         return int(x * w), int(y * h)
     
     def reset_smoothing(self):
-        """Reset the temporal smoothing buffer."""
         self.landmark_history.clear()
     
     def release(self):
-        """Release resources."""
         self.pose.close()
