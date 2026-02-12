@@ -2,6 +2,10 @@
 
 Real-time exercise form analysis using MediaPipe pose estimation. Provides automatic rep counting and form feedback for squats, push-ups, and lunges.
 
+## Demo
+
+[Watch Demo Video](https://youtu.be/BQ9T0wK29-8)
+
 ## Features
 
 - **Real-time Pose Tracking** - MediaPipe-based pose detection with temporal smoothing
